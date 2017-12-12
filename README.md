@@ -1,5 +1,5 @@
-# Intro to Accessibility
+# Custom Selects Aren't Worth IT
 
-https://fac-accessibility.surge.sh/
+https://custom-selects.surge.sh/
 
-My slides for a talk on accessibility for the 12th London cohort of [Founders and Coders](https://foundersandcoders.com)
+My slides for a talk on why you shouldn't build custom selects
