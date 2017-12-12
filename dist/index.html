@@ -1,0 +1,235 @@
+
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/assets/style.css">
+    <title>Intro to Accessibility</title>
+
+    <!-- Favicon/PWA stuff -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#db7093">
+  </head>
+  <body class="language-javascript">
+  <main class="container">
+    <section class="slide">
+    <h1 id="custom-selects-aren-t-worth-it">Custom Selects Aren’t Worth It</h1>
+<p><strong>(or, The trials and tribulations of trying to do it properly)</strong></p>
+<p><a href="https://twitter.com/_oliverjam">@_oliverjam</a><br><a href="http://oliverjam.es">oliverjam.es</a></p>
+</section><section class="slide">
+<h2 id="accessibility-is-important-">Accessibility is important!</h2>
+<p>But this talk isn’t about why</p>
+</section><section class="slide">
+<h2 id="the-process">The process</h2>
+<p>This is an overview of the process of building accessible components (not a guide)</p>
+</section><section class="slide">
+<h2 id="a-rant">A rant</h2>
+<p>So we got given some designs…</p>
+</section><section class="slide">
+<h2 id="three-attempts">Three attempts</h2>
+<ol>
+<li>Managing focus directly</li>
+<li>Using <code>aria-activedescendant</code></li>
+<li>Using live regions</li>
+</ol>
+</section><section class="slide">
+<h2 id="spoilers">Spoilers</h2>
+<p>We weren’t happy with any of the solutions</p>
+</section><section class="slide">
+<h2 id="research">Research</h2>
+<ul>
+<li>Surprisingly few resources on basic selects</li>
+<li>All focused on building more complex components like autocompletes</li>
+</ul>
+</section><section class="slide">
+<h2 id="native-behaviour">Native behaviour</h2>
+<p>The bare minimum should be to reproduce native browser behaviour</p>
+<ul>
+<li>A button that triggers a popup menu</li>
+<li>Usable without a mouse</li>
+<li>Accessible to assistive technologies</li>
+</ul>
+<select style="width: 200px; margin-top: 1em;"><br>  <option value="apples">Apples</options><br>  <option value="bananas">Bananas</options><br>  <option value="oranges">Oranges</options><br></select>
+
+</section><section class="slide">
+<h2 id="-abbr-aria-abbr-roles"><abbr>ARIA</abbr> roles</h2>
+<p><code>aria-role</code> lets divs roleplay as something more interesting</p>
+</section><section class="slide">
+<h2 id="listbox">Listbox</h2>
+<blockquote>
+<p>The listbox role is used to identify an element that creates<br>a list from which a user may select one or more items</p>
+<p><cite>—<a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Techniques/Using_the_listbox_role">MDN</a></cite></p>
+</blockquote>
+<p>Related to “combobox” (usually used for autocompletes)</p>
+</section><section class="slide">
+<h2 id="minimal-markup">Minimal markup</h2>
+<pre><code class="lang-javascript">&lt;button
+  aria-label=&quot;Destination select menu&quot;
+  aria-expanded=&quot;false&quot;
+  aria-haspopup=&quot;true&quot;&gt;
+  {selectedOption}
+&lt;/button&gt;
+&lt;ul
+  role=&quot;listbox&quot;
+  tabindex=&quot;-1&quot;&gt;
+  &lt;li
+    id=&quot;option-0&quot;
+    role=&quot;option&quot;
+    value=&quot;tattooine&quot;&gt;
+    Tattooine
+  &lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+</section><section class="slide">
+<h2 id="first-attempt">First attempt</h2>
+<p>I started with the obvious: move focus to each child as it becomes ‘active’</p>
+</section><section class="slide">
+<h3 id="voiceover-demo">Voiceover demo</h3>
+<video src="assets/vid/focus-select.mp4" controls></video>
+
+</section><section class="slide">
+<h3 id="problems">Problems</h3>
+<ul>
+<li>Managing focus is annoying, especially in React.</li>
+<li>Async state changes meant focus got out of sync</li>
+<li>We didn’t want to rely on refs</li>
+</ul>
+</section><section class="slide">
+<h2 id="second-attempt">Second attempt</h2>
+<p><code>aria-activedescendant</code> to the rescue!</p>
+<blockquote>
+<p>The aria-activedescendant property provides an alternative method of managing focus for interactive elements</p>
+<p><cite>—<a href="https://www.w3.org/WAI/GL/wiki/Using_aria-activedescendant_to_allow_changes_in_focus_within_widgets_to_be_communicated_to_Assistive_Technology">W3C</a></cite></p>
+</blockquote>
+</section><section class="slide">
+<h3 id="minimal-markup">Minimal markup</h3>
+<pre><code class="lang-javascript">...
+&lt;ul
+  role=&quot;listbox&quot;
+  tabindex=&quot;-1&quot;
+  aria-activedescendant=&quot;option-{activeIndex}&quot;&gt;
+  ...
+&lt;/ul&gt;
+</code></pre>
+</section><section class="slide">
+<h3 id="magic-abbr-aria-abbr-property">Magic <abbr>ARIA</abbr> property</h3>
+<p>Just update <code>aria-activedescendant</code> on the parent with the ID of the currently active child—simple right?</p>
+</section><section class="slide">
+<h3 id="voiceover-demo-1-safari">Voiceover demo 1: Safari</h3>
+<video src="assets/vid/activedescendant-success.mp4" controls></video>
+
+</section><section class="slide">
+<h3 id="voiceover-demo-2-chrome">Voiceover demo 2: Chrome</h3>
+<video src="assets/vid/activedescendant-failure.mp4" controls></video>
+
+</section><section class="slide">
+<h3 id="problems">Problems</h3>
+<ul>
+<li>The implementation is still kind of buggy</li>
+<li>Chromium has an <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=666049">open bug</a> for this</li>
+<li>Safari has a similar one for <code>role=&quot;combobox&quot;</code></li>
+</ul>
+</section><section class="slide">
+<h2 id="third-and-final-attempt">Third and final attempt</h2>
+<ul>
+<li>How do third party libraries solve this?</li>
+<li><a href="https://github.com/paypal/downshift">Downshift</a> is amazing</li>
+<li>Live regions!</li>
+</ul>
+</section><section class="slide">
+<h3 id="live-regions">Live regions</h3>
+<p>Screenreaders read out whatever text you dump in them. Allows us create a custom ‘aural UI’</p>
+<ul>
+<li><code>aria-live=&quot;assertive&quot;</code></li>
+<li><code>role=&quot;status&quot;</code></li>
+</ul>
+</section><section class="slide">
+<h3 id="minimal-markup">Minimal markup</h3>
+<pre><code class="lang-javascript">...
+&lt;ul
+  role=&quot;listbox&quot;
+  tabindex=&quot;-1&quot;&gt;
+  ...
+&lt;/ul&gt;
+&lt;div
+  class=&quot;visually-hidden&quot;
+  aria-live=&quot;assertive&quot;
+  role=&quot;status&quot;&gt;
+  {a11y message}
+&lt;/div&gt;
+</code></pre>
+</section><section class="slide">
+<h3 id="voiceover-demo">Voiceover demo</h3>
+<video src="assets/vid/live-select.mp4" controls></video>
+
+</section><section class="slide">
+<h3 id="problems">Problems</h3>
+<ul>
+<li>Changes the default screenreader experience</li>
+<li>You’re now responsible for everything</li>
+<li>Translations!</li>
+</ul>
+</section><section class="slide">
+<h2 id="what-did-we-gain-">What did we gain?</h2>
+<p>We spent a week researching and building—ended up with ~240 lines of code to maintain and a functionally worse component.</p>
+<p>Not a great trade-off.</p>
+</section><section class="slide">
+<h2 id="the-real-solution">The real solution</h2>
+<p>Just use a native <code>&lt;select&gt;</code>.</p>
+<p>You can style the button to look right, then let users have a platform-specific experience for the actual menu.</p>
+</section><section class="slide">
+<h2 id="takeaway">Takeaway</h2>
+<p>I don’t want to discourage anyone from building cool stuff.</p>
+<p>80% accessible is better than 0%.</p>
+<p>But maybe don’t spend a week needlessly replicating browser functionality 😉</p>
+</section><section class="slide">
+<h2 id="bonus-bug-">Bonus bug!</h2>
+<video src="assets/vid/sticky-bug.mp4" controls></video>
+
+</section><section class="slide">
+<h2 id="resources">Resources</h2>
+<ul>
+<li><a href="https://github.com/oliverjam/react-a11y-select">My demo code</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Techniques/Using_the_listbox_role">Mozilla’s ‘Using the Listbox role’</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Techniques/Using_the_aria-activedescendant_attribute">Mozilla’s ‘Using the aria-activedescendant attribute’</a></li>
+<li><a href="https://github.com/paypal/downshift">Paypal’s Downshift library</a></li>
+<li><a href="https://inclusive-components.design/">Tutorials for building real components</a></li>
+</ul>
+</section><section class="slide">
+<h1 id="thanks-">Thanks 🔥</h1>
+<p><a href="https://twitter.com/_oliverjam">@_oliverjam</a><br><a href="http://oliverjam.es">oliverjam.es</a></p>
+
+    </section>
+  </main>
+  <nav class="nav">
+    <button class="nav__button" data-direction="37" disabled>
+      <svg class="icon" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="currentcolor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+            <path d="M20 30 L8 16 20 2"></path>
+        </svg>
+    </button>
+    <div class="progress"></div>
+    <button class="nav__button" data-direction="39" disabled>
+      <svg class="icon" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="currentcolor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+            <path d="M12 30 L24 16 12 2"></path>
+        </svg>
+    </button>
+  </nav>
+    <script src='/assets/index.js'></script>
+    <script src='/assets/prism.js'></script>
+    <script>
+if ('serviceWorker' in navigator) {
+   navigator.serviceWorker
+   .register('/service-worker.js')
+   .then(() => {
+     console.log('Service worker registered');
+   })
+   .catch(err => {
+     console.log('Service worker registration failed: ' + err);
+   });
+}
+</script>
+  </body>
+  </html>
